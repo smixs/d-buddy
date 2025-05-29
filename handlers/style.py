@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from services.anthropic import AnthropicService
+from utils.telegram_formatting import format_style_result, format_error_message
 from config.config import config
 from loguru import logger
 
@@ -40,10 +41,10 @@ async def process_style_selection(callback: CallbackQuery):
         # Process text with selected style
         processed_text = await anthropic_service.process_text(original_text, style)
         
-        # Send result as a new message (without prefix)
-        await callback.message.answer(processed_text)
+        # Format and send result
+        formatted_result = format_style_result(style, processed_text)
+        await callback.message.answer(formatted_result)
         
     except Exception as e:
-        error_msg = f"Ошибка: {str(e)}"
         logger.error(f"Error processing text: {str(e)}")
-        await callback.message.answer(error_msg) 
+        await callback.message.answer(format_error_message(str(e))) 
