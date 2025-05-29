@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import Message
+from aiogram.utils.chat_action import ChatActionSender
 from services.deepgram import DeepgramService
 from utils.formatting import format_transcription
 from utils.telegram_formatting import (
-    format_transcription_header, format_error_message, format_processing_message
+    format_transcription_header, format_error_message
 )
 from config.config import config
 from loguru import logger
@@ -15,21 +16,16 @@ deepgram_service = DeepgramService(config.DEEPGRAM_API_KEY)
 @router.message(F.voice)
 async def handle_voice(message: Message):
     try:
-        # Show processing status
-        await message.bot.send_chat_action(message.chat.id, "typing")
-        status_msg = await message.answer(format_processing_message())
-        
-        # Get file
-        file = await message.bot.get_file(message.voice.file_id)
-        file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
-        
-        logger.debug(f"Processing voice message. File URL: {file_url}")
-        
-        # Transcribe
-        result = await deepgram_service.transcribe_audio(file_url)
-        
-        # Delete processing message
-        await status_msg.delete()
+        # Use typing indicator during processing
+        async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
+            # Get file
+            file = await message.bot.get_file(message.voice.file_id)
+            file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
+            
+            logger.debug(f"Processing voice message. File URL: {file_url}")
+            
+            # Transcribe
+            result = await deepgram_service.transcribe_audio(file_url)
         
         # Format with header
         header = format_transcription_header(result.confidence)
