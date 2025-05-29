@@ -25,8 +25,3 @@ def format_error_message(error: str) -> str:
     """Format error message."""
     escaped_error = escape_html(error)
     return f"❌ <b>Ошибка</b>\n<code>{escaped_error}</code>"
-
-
-def format_processing_message() -> str:
-    """Format processing status message."""
-    return "<i>⏳ Обрабатываю...</i>"

@@ -1,9 +1,10 @@
 from aiogram import Router, F
 from aiogram.types import Message
+from aiogram.utils.chat_action import ChatActionSender
 from services.deepgram import DeepgramService
 from utils.formatting import format_transcription
 from utils.telegram_formatting import (
-    format_transcription_header, format_error_message, format_processing_message
+    format_transcription_header, format_error_message
 )
 from config.config import config
 from loguru import logger
@@ -15,21 +16,16 @@ deepgram_service = DeepgramService(config.DEEPGRAM_API_KEY)
 @router.message(F.video)
 async def handle_video(message: Message):
     try:
-        # Show typing action
-        await message.bot.send_chat_action(message.chat.id, "typing")
-        status_msg = await message.answer(format_processing_message())
-        
-        # Get file
-        file = await message.bot.get_file(message.video.file_id)
-        file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
-        
-        logger.debug(f"Processing video file. File URL: {file_url}")
-        
-        # Transcribe
-        result = await deepgram_service.transcribe_audio(file_url)
-        
-        # Delete processing message
-        await status_msg.delete()
+        # Use typing indicator during processing
+        async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
+            # Get file
+            file = await message.bot.get_file(message.video.file_id)
+            file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
+            
+            logger.debug(f"Processing video file. File URL: {file_url}")
+            
+            # Transcribe
+            result = await deepgram_service.transcribe_audio(file_url)
         
         # Format with header
         header = format_transcription_header(result.confidence)
@@ -53,22 +49,22 @@ async def handle_video(message: Message):
 
 @router.message(F.video_note)
 async def handle_video_note(message: Message):
-    processing_msg = await message.reply(format_processing_message())
-    
     try:
-        file = await message.bot.get_file(message.video_note.file_id)
-        file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
-        
-        logger.debug(f"Processing video note file. File URL: {file_url}")
-        
-        result = await deepgram_service.transcribe_audio(file_url)
+        # Use typing indicator during processing
+        async with ChatActionSender.typing(bot=message.bot, chat_id=message.chat.id):
+            file = await message.bot.get_file(message.video_note.file_id)
+            file_url = f"https://api.telegram.org/file/bot{config.BOT_TOKEN}/{file.file_path}"
+            
+            logger.debug(f"Processing video note file. File URL: {file_url}")
+            
+            result = await deepgram_service.transcribe_audio(file_url)
         
         # Format with header
         header = format_transcription_header(result.confidence)
         parts, reply_markup = format_transcription(result)
         
-        # Edit with formatted header
-        await processing_msg.edit_text(header)
+        # Send header
+        await message.answer(header)
         
         # Send parts if any
         if parts:
@@ -78,4 +74,4 @@ async def handle_video_note(message: Message):
         
     except Exception as e:
         logger.error(f"Full error: {str(e)}\n\nTraceback:\n{''.join(traceback.format_exc())}")
-        await processing_msg.edit_text(format_error_message(str(e)))
+        await message.answer(format_error_message(str(e)))
