@@ -2,6 +2,9 @@ from aiogram import Router, F
 from aiogram.types import Message
 from services.deepgram import DeepgramService
 from utils.formatting import format_transcription
+from utils.telegram_formatting import (
+    format_transcription_header, format_error_message, format_processing_message
+)
 from config.config import config
 from loguru import logger
 import traceback
@@ -14,6 +17,7 @@ async def handle_audio(message: Message):
     try:
         # Show typing action
         await message.bot.send_chat_action(message.chat.id, "typing")
+        status_msg = await message.answer(format_processing_message())
         
         # Get file
         file = await message.bot.get_file(message.audio.file_id)
@@ -24,17 +28,25 @@ async def handle_audio(message: Message):
         # Transcribe
         result = await deepgram_service.transcribe_audio(file_url)
         
-        # Format and send
+        # Delete processing message
+        await status_msg.delete()
+        
+        # Format with header
+        header = format_transcription_header(result.confidence)
         parts, reply_markup = format_transcription(result)
         
-        # Send all parts except last one
-        for part in parts[:-1]:
-            await message.answer(part)
-        
-        # Send last part with keyboard
-        await message.answer(parts[-1], reply_markup=reply_markup)
+        # Send header with first part
+        if parts:
+            await message.answer(header)
+            await message.answer(parts[0], reply_markup=reply_markup if len(parts) == 1 else None)
+            
+            # Send remaining parts
+            for i, part in enumerate(parts[1:], 1):
+                is_last = i == len(parts) - 1
+                await message.answer(part, reply_markup=reply_markup if is_last else None)
+        else:
+            await message.answer(header)
         
     except Exception as e:
-        error_msg = f"Ошибка: {str(e)}"
         logger.error(f"Full error: {str(e)}\n{traceback.format_exc()}")
-        await message.answer(error_msg)
+        await message.answer(format_error_message(str(e)))

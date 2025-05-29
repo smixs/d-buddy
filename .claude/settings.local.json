@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(ls:*)",
-      "Bash(claude tools use mcp__exa__search:*)"
+      "Bash(claude tools use mcp__exa__search:*)",
+      "Bash(./restart.sh:*)",
+      "Bash(git add:*)"
     ]
   },
   "enableAllProjectMcpServers": false
