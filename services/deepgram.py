@@ -3,6 +3,7 @@ from models.transcription import TranscriptionResult, Word
 import ssl
 import certifi
 import json
+from loguru import logger
 
 class DeepgramService:
     def __init__(self, api_key: str):
@@ -35,6 +36,20 @@ class DeepgramService:
         async with ClientSession(connector=TCPConnector(ssl=self.ssl_context)) as session:
             async with session.post(self.base_url, headers=headers, params=params, data=audio_data) as response:
                 result = await response.json()
+                
+                logger.debug(f"Deepgram response status: {response.status}")
+                logger.debug(f"Deepgram response: {json.dumps(result, indent=2)}")
+                
+                # Проверяем статус ответа и наличие результатов
+                if response.status != 200:
+                    raise Exception(f"Deepgram API error: {response.status}, {result}")
+                
+                if "results" not in result:
+                    raise Exception(f"No results in Deepgram response: {result}")
+                    
+                if not result["results"]["channels"]:
+                    raise Exception("No channels in Deepgram results")
+                    
                 alternative = result["results"]["channels"][0]["alternatives"][0]
                 
                 # Преобразуем слова из Deepgram в наш формат
