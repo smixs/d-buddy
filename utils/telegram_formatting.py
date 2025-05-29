@@ -13,17 +13,10 @@ def format_transcription_header(confidence: float) -> str:
 
 
 def format_style_result(style: str, text: str) -> str:
-    """Format styled text result with proper headers."""
-    style_names = {
-        "proofread": "✍️ <b>Отредактированный текст</b>",
-        "my": "⚡ <b>Неформальный стиль</b>",
-        "business": "👔 <b>Деловой стиль</b>",
-        "brief": "📋 <b>Обработанный текст</b>"
-    }
-    
-    header = style_names.get(style, "📄 <b>Обработанный текст</b>")
-    
-    return f"{header}\n\n{text}"
+    """Format styled text result without headers for clean copy-paste."""
+    # Return just the processed text without any headers
+    # User wants clean text they can copy-paste without editing
+    return text
 
 
 
