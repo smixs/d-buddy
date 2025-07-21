@@ -1,4 +1,4 @@
-# 🎙️ Transcription Bot v2
+# 🎙️ Dictation Buddy Bot v2
 
 <div align="center">
   <img src="mascot.png" alt="Transcription Bot Mascot" width="200"/>
