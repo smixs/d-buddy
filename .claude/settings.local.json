@@ -4,7 +4,8 @@
       "Bash(ls:*)",
       "Bash(claude tools use mcp__exa__search:*)",
       "Bash(./restart.sh:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(mkdir:*)"
     ]
   },
   "enableAllProjectMcpServers": false

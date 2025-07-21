@@ -2,6 +2,8 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.utils.chat_action import ChatActionSender
 from services.deepgram import DeepgramService
+from services.metrics import MetricsService
+from models.metrics import MetricsEvent
 from utils.formatting import format_transcription
 from utils.telegram_formatting import (
     format_transcription_header, format_error_message
@@ -12,6 +14,7 @@ import traceback
 
 router = Router()
 deepgram_service = DeepgramService(config.DEEPGRAM_API_KEY)
+metrics_service = MetricsService()
 
 @router.message(F.voice)
 async def handle_voice(message: Message):
@@ -26,6 +29,12 @@ async def handle_voice(message: Message):
             
             # Transcribe
             result = await deepgram_service.transcribe_audio(file_url)
+            
+            # Track metrics
+            metrics_service.track_event(MetricsEvent(
+                user_id=str(message.from_user.id),
+                event_type="transcription"
+            ))
         
         # Format with header
         header = format_transcription_header(result.confidence)

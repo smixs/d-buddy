@@ -127,7 +127,7 @@ class AnthropicService:
             # Call Anthropic API (synchronously)
             logger.info("Sending request to Anthropic API")
             response = self.client.messages.create(
-                model="claude-3-5-haiku-latest",
+                model="claude-3-5-sonnet-latest",
                 max_tokens=2048,
                 messages=[{
                     "role": "user",

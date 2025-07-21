@@ -8,5 +8,6 @@ class Config(BaseModel):
     BOT_TOKEN: str = os.getenv("BOT_TOKEN")
     DEEPGRAM_API_KEY: str = os.getenv("DEEPGRAM_API_KEY")
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY")
+    ADMIN_USER_ID: int = int(os.getenv("ADMIN_USER_ID", "0"))
 
 config = Config()
