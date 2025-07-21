@@ -41,7 +41,7 @@ async def handle_voice(message: Message):
             
             await message.answer(
                 "⏰ Вы превысили лимит транскрипций (5 в час).\n"
-                f"Попробуйте снова через {time_str}."
+                f"Попробуйте снова через {time_str}. Нужно больше? Напишите @shimaoz"
             )
             return
         
