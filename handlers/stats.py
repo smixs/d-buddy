@@ -150,7 +150,14 @@ async def process_stats_selection(callback: CallbackQuery):
             stats = metrics_service.get_month_stats(period)
             message = format_stats_message(period, stats)
         
-        await callback.message.edit_text(message, reply_markup=create_months_keyboard())
+        try:
+            await callback.message.edit_text(message, reply_markup=create_months_keyboard())
+        except Exception as edit_error:
+            if "message is not modified" in str(edit_error).lower():
+                # Ignore this error - content is the same
+                pass
+            else:
+                raise edit_error
         
     except Exception as e:
         logger.error(f"Error processing stats selection: {str(e)}")

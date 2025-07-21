@@ -8,6 +8,7 @@ services:
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data
+    user: "1000:1000"
     env_file:
       - .env
     environment:
