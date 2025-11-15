@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
+from typing import Callable, Dict, List
 try:
     from loguru import logger
 except ImportError:
@@ -9,12 +9,19 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 class RateLimiterService:
-    def __init__(self, data_dir: str = "data", max_requests_per_hour: int = 5, admin_user_id: int = None):
+    def __init__(
+        self,
+        data_dir: str = "data",
+        max_requests_per_hour: int = 5,
+        admin_user_id: int = None,
+        is_unlimited_user: Callable[[str], bool] | None = None,
+    ):
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
         self.rate_limit_file = self.data_dir / "rate_limits.json"
         self.max_requests_per_hour = max_requests_per_hour
         self.admin_user_id = admin_user_id
+        self.is_unlimited_user = is_unlimited_user or (lambda _user_id: False)
     
     def _load_rate_limits(self) -> Dict[str, List[str]]:
         """Load rate limit data from JSON file."""
@@ -50,11 +57,21 @@ class RateLimiterService:
             return False
         return str(self.admin_user_id) == str(user_id)
     
+    def _has_unlimited_access(self, user_id: str) -> bool:
+        user_id_str = str(user_id)
+        if self.is_admin(user_id_str):
+            return True
+        try:
+            return bool(self.is_unlimited_user(user_id_str))
+        except Exception as exc:
+            logger.error(f"Unlimited user check failed: {exc}")
+            return False
+
     def can_make_request(self, user_id: str, username: str = None) -> bool:
         """Check if user can make a transcription request."""
-        # Admin users have no limits
-        if self.is_admin(user_id):
-            logger.debug(f"Admin user {user_id} bypassing rate limit")
+        # Unlimited users have no limits
+        if self._has_unlimited_access(user_id):
+            logger.debug(f"Unlimited user {user_id} bypassing rate limit")
             return True
         
         rate_limits = self._load_rate_limits()
@@ -70,8 +87,8 @@ class RateLimiterService:
     
     def record_request(self, user_id: str, username: str = None) -> None:
         """Record a transcription request for the user."""
-        # Don't record for admins to keep data clean
-        if self.is_admin(user_id):
+        # Don't record for unlimited users to keep data clean
+        if self._has_unlimited_access(user_id):
             return
         
         rate_limits = self._load_rate_limits()
@@ -93,8 +110,8 @@ class RateLimiterService:
     
     def get_remaining_requests(self, user_id: str, username: str = None) -> int:
         """Get number of remaining requests for the user."""
-        # Admin users have unlimited requests
-        if self.is_admin(user_id):
+        # Unlimited users have unlimited requests
+        if self._has_unlimited_access(user_id):
             return float('inf')
         
         rate_limits = self._load_rate_limits()
@@ -109,8 +126,8 @@ class RateLimiterService:
     
     def get_time_until_next_request(self, user_id: str, username: str = None) -> timedelta:
         """Get time until user can make next request."""
-        # Admin users can always make requests
-        if self.is_admin(user_id):
+        # Unlimited users can always make requests
+        if self._has_unlimited_access(user_id):
             return timedelta(0)
         
         rate_limits = self._load_rate_limits()

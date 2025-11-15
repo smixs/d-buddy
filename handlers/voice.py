@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.utils.chat_action import ChatActionSender
+from services import access_control_service
 from services.deepgram import DeepgramService
 from services.metrics import MetricsService
 from services.rate_limiter import RateLimiterService
@@ -18,7 +19,8 @@ deepgram_service = DeepgramService(config.DEEPGRAM_API_KEY)
 metrics_service = MetricsService()
 rate_limiter = RateLimiterService(
     admin_user_id=config.ADMIN_USER_ID,
-    max_requests_per_hour=config.RATE_LIMIT_PER_HOUR
+    max_requests_per_hour=config.RATE_LIMIT_PER_HOUR,
+    is_unlimited_user=access_control_service.is_unlimited,
 )
 
 @router.message(F.voice)
