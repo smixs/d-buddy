@@ -103,3 +103,7 @@ celerybeat.pid
 
 # Cursor specific
 .cursorrules .specstory/
+
+# Runtime data files (metrics and rate limits change frequently)
+data/metrics.json
+data/rate_limits.json
