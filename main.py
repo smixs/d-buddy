@@ -4,7 +4,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 from config.config import config
-from handlers import voice, video, audio, style, stats
+from handlers import voice, video, audio, style, stats, admin_whitelist
 from loguru import logger
 
 # Configure logging
@@ -23,6 +23,7 @@ async def main():
     dp.include_router(audio.router)
     dp.include_router(style.router)
     dp.include_router(stats.router)
+    dp.include_router(admin_whitelist.router)
     
     # Start polling
     logger.info("Starting bot...")
