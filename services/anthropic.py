@@ -4,6 +4,7 @@ from pathlib import Path
 import logging
 import re
 import html
+from config.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -125,9 +126,9 @@ class AnthropicService:
             logger.debug(f"Formatted prompt length: {len(prompt)}")
             
             # Call Anthropic API (synchronously)
-            logger.info("Sending request to Anthropic API")
+            logger.info(f"Sending request to Anthropic API using model: {config.ANTHROPIC_MODEL}")
             response = self.client.messages.create(
-                model="claude-3-5-sonnet-latest",
+                model=config.ANTHROPIC_MODEL,
                 max_tokens=2048,
                 messages=[{
                     "role": "user",
