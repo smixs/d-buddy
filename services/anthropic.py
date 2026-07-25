@@ -138,8 +138,14 @@ class AnthropicService:
             
             if not response or not response.content:
                 raise ValueError("Empty response from Anthropic API")
-                
-            result = response.content[0].text
+
+            # Response may contain non-text blocks (e.g. thinking) — take the first text block
+            result = next(
+                (block.text for block in response.content if getattr(block, "type", None) == "text" and block.text),
+                None,
+            )
+            if not result:
+                raise ValueError("No text content in API response")
             
             # Sanitize HTML to ensure valid Telegram formatting
             sanitized_result = self._sanitize_html(result)
