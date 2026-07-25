@@ -107,3 +107,8 @@ celerybeat.pid
 # Runtime data files (metrics and rate limits change frequently)
 data/metrics.json
 data/rate_limits.json
+data/billing.db*
+data/unlimited_users.json
+nohup.out
+bot.log*
+*.log.zip
